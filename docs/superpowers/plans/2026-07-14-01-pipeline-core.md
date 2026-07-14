@@ -83,7 +83,8 @@ def test_sanity():
 
 Run:
 ```bash
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt -q && .venv/bin/pytest -q
+python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt -q && .venv/bin/pytest -q
+# NOTE: this machine's default python3 is 3.7 — always use python3.12 explicitly
 ```
 Expected: `1 passed`
 
