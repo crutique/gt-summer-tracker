@@ -580,6 +580,24 @@ def test_derived_flag_set_when_pa_not_native():
     sliders = {s["metric"]: s for s in bundle["a"]["hitting"]["sliders"]}
     assert sliders["kPct"]["derived"] is True   # PA derived from counting stats
     assert sliders["ops"]["derived"] is False
+
+
+def test_absent_wanted_player_omitted_for_carry_forward():
+    bundle = compute.league_bundle(CFG, {"batting": BATTING, "pitching": PITCHING},
+                                   {}, wanted={"ghost"})
+    assert "ghost" not in bundle
+
+
+def test_zero_out_pitcher_counts_toward_bf_pools():
+    pitching = PITCHING + [{"stats_id": "p3", "name": "P3", "team": "T3", "g": 1, "gs": 0,
+                            "ip_outs": 0, "w": 0, "l": 0, "sv": 0, "hld": 0,
+                            "h": 2, "r": 3, "er": 3, "bb": 1, "k": 0, "hb": 0, "hr": 1}]
+    bundle = compute.league_bundle(CFG, {"batting": BATTING, "pitching": pitching},
+                                   {}, wanted={"p3"})
+    sliders = {s["metric"]: s for s in bundle["p3"]["pitching"]["sliders"]}
+    # ip-denominated metrics skipped (rate is None); BF-denominated ones computed, no crash
+    assert "era" not in sliders and "kPct" in sliders and "oppAvg" in sliders
+    assert bundle["p3"]["pitching"]["rates"]["era"] is None
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -645,7 +663,7 @@ def league_bundle(cfg, stats, logs, wanted):
     bat_rows = {r["stats_id"]: r for r in stats.get("batting", [])}
     pit_rows = {r["stats_id"]: r for r in stats.get("pitching", [])}
     bat_rates = [sm.batting_rates(r) for r in bat_rows.values() if sm.pa(r) > 0]
-    pit_rates = [sm.pitching_rates(r) for r in pit_rows.values() if (r.get("ip_outs") or 0) > 0]
+    pit_rates = [sm.pitching_rates(r) for r in pit_rows.values() if sm.bf(r) > 0]  # nonzero IP or BF per spec
     lg_bat = sm.batting_rates(_aggregate(list(bat_rows.values()), _BAT_AGG))
     lg_pit = sm.pitching_rates(_aggregate(list(pit_rows.values()), _PIT_AGG))
 
@@ -653,6 +671,8 @@ def league_bundle(cfg, stats, logs, wanted):
     for sid in wanted:
         hit = _hitting_block(bat_rows[sid], bat_rates, lg_bat, tier) if sid in bat_rows else None
         pit = _pitching_block(pit_rows[sid], pit_rates, lg_pit, tier) if sid in pit_rows else None
+        if hit is None and pit is None:
+            continue  # absent from both tables -> omit so output.assemble carries forward prior data
         bundle[sid] = {"hitting": hit, "pitching": pit, "gamelog": logs.get(sid, [])}
     return bundle
 ```
@@ -660,7 +680,7 @@ def league_bundle(cfg, stats, logs, wanted):
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `.venv/bin/pytest pipeline/tests/test_compute.py -q`
-Expected: `3 passed`
+Expected: `5 passed`
 
 - [ ] **Step 5: Commit**
 
@@ -805,6 +825,8 @@ git commit -m "feat: fixture scraper platform with northwoods sample data"
 ---
 
 ### Task 7: validate — pre-publish sanity gate
+
+Invariant note (from Task 5 review): when an assigned player vanishes from league tables, `compute.league_bundle` now OMITS them, so `output.assemble` carries forward their prior data automatically. The missing-player check below is therefore a warning (operator signal), not an error — a vanished player degrades gracefully instead of blanking.
 
 **Files:**
 - Create: `pipeline/validate.py`
@@ -1250,7 +1272,7 @@ Expected: `2 passed`
 - [ ] **Step 5: Run the FULL suite**
 
 Run: `.venv/bin/pytest -q`
-Expected: all tests pass (sanity + registry 3 + stats_math 5 + percentiles 5 + compute 3 + fixture 3 + validate 5 + output 5 + build 2 = 32)
+Expected: all tests pass (sanity 1 + registry 7 + stats_math 5 + percentiles 5 + compute 5 + fixture 3 + validate 5 + output 5 + build 2 = 38; registry and compute grew during review-fix cycles)
 
 - [ ] **Step 6: Commit**
 
