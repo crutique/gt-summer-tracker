@@ -46,3 +46,31 @@ def test_missing_assigned_player_is_warning_not_error():
         [_assigned("ghost", "hitter")], previous={})
     assert errors == []
     assert any("ghost" in w for w in warnings)
+
+
+def test_pitching_counting_decrease_is_error():
+    prev = {"p": {"summer": {"leagueKey": "lg"},
+                  "pitching": {"counting": {"g": 7, "k": 45, "ip": "35.1"}}}}
+    errors, _ = validate.check_league("lg", {"batting": GOOD_BAT, "pitching": GOOD_PIT},
+                                      [_assigned("p", "pitcher")], previous=prev)
+    assert any("decreased" in e for e in errors)
+
+
+def test_one_empty_table_is_error():
+    errors, _ = validate.check_league("lg", {"batting": [], "pitching": GOOD_PIT},
+                                      [], previous={})
+    assert any("empty" in e for e in errors)
+
+
+def test_malformed_previous_record_does_not_crash():
+    prev = {"a": {"summer": {"leagueKey": "lg"}, "hitting": {"rates": {}}}}
+    errors, warnings = validate.check_league("lg", {"batting": GOOD_BAT, "pitching": GOOD_PIT},
+                                             [_assigned("a", "hitter")], previous=prev)
+    assert errors == [] and warnings == []
+
+
+def test_negative_pitching_count_any_key_is_error():
+    bad = [dict(GOOD_PIT[0], bb=-1)]
+    errors, _ = validate.check_league("lg", {"batting": GOOD_BAT, "pitching": bad},
+                                      [], previous={})
+    assert any("negative" in e for e in errors)
