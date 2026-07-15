@@ -1,0 +1,94 @@
+---
+import { percentileColor } from '../lib/colors';
+import { fmtEra, fmtPct, fmtPer9, fmtRate3 } from '../lib/format';
+import type { Slider } from '../lib/data';
+
+interface Props {
+  slider: Slider;
+}
+const { slider } = Astro.props;
+
+const LABELS: Record<string, string> = {
+  ops: 'OPS', avg: 'AVG', obp: 'OBP', slg: 'SLG', kPct: 'K%', bbPct: 'BB%',
+  era: 'ERA', whip: 'WHIP', hr9: 'HR/9', oppAvg: 'OPP AVG',
+};
+
+function fmtValue(metric: string, v: number): string {
+  if (['avg', 'obp', 'slg', 'ops', 'oppAvg'].includes(metric)) return fmtRate3(v);
+  if (['era', 'whip'].includes(metric)) return fmtEra(v);
+  if (['kPct', 'bbPct'].includes(metric)) return fmtPct(v);
+  return fmtPer9(v);
+}
+
+const color = percentileColor(slider.percentile);
+const label = LABELS[slider.metric] ?? slider.metric.toUpperCase();
+const tick = slider.leagueAvgPercentile;
+---
+<div class="slider-row">
+  <span class="metric">{label}</span>
+  <div class="track">
+    <div class="fill" style={`width:${slider.percentile}%;background:linear-gradient(90deg, var(--pct-low), ${color})`}></div>
+    {tick !== null && (
+      <>
+        <div class="tick" style={`left:${tick}%`}></div>
+        <div class="tick-label" style={`left:${tick}%`}>
+          lg avg {slider.leagueAvg !== null ? fmtValue(slider.metric, slider.leagueAvg) : ''}
+        </div>
+      </>
+    )}
+    <div class="bubble" style={`left:${slider.percentile}%;background:${color}`}>{slider.percentile}</div>
+  </div>
+  <span class="value">{fmtValue(slider.metric, slider.value)}</span>
+</div>
+
+<style>
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0 24px;
+  }
+  .metric { width: 58px; font-size: 12px; font-weight: 600; }
+  .track {
+    flex: 1;
+    height: 10px;
+    background: #e6eaef;
+    border-radius: 5px;
+    position: relative;
+  }
+  .fill { height: 100%; border-radius: 5px; }
+  .tick {
+    position: absolute;
+    top: -4px;
+    width: 2px;
+    height: 18px;
+    background: #9aa3af;
+    border-radius: 1px;
+    transform: translateX(-50%);
+  }
+  .tick-label {
+    position: absolute;
+    top: 15px;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: #8b93a1;
+    white-space: nowrap;
+  }
+  .bubble {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .value { width: 46px; text-align: right; font-size: 12px; font-weight: 700; }
+</style>

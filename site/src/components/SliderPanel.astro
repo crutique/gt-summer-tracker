@@ -1,0 +1,30 @@
+---
+import PercentileSlider from './PercentileSlider.astro';
+import type { StatBlock } from '../lib/data';
+
+interface Props {
+  block: StatBlock;
+  leagueName: string;
+  side: 'hitting' | 'pitching';
+  dual: boolean;
+}
+const { block, leagueName, side, dual } = Astro.props;
+const title = dual
+  ? `${leagueName} Percentiles — ${side === 'hitting' ? 'Batting' : 'Pitching'}`
+  : `${leagueName} Percentiles`;
+---
+<section>
+  <h2 class="section-title">{title}</h2>
+  {block.sliders ? (
+    block.sliders.map((s) => <PercentileSlider slider={s} />)
+  ) : (
+    <p class="no-pct">
+      {leagueName} does not publish full league statistics, so percentiles aren't available.
+    </p>
+  )}
+</section>
+
+<style>
+  .no-pct { color: var(--text-mut); font-size: 13px; }
+  section { margin-bottom: 8px; }
+</style>

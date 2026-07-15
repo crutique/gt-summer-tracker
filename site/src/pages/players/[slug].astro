@@ -3,6 +3,7 @@ import CountingList from '../../components/CountingList.astro';
 import StatGrid from '../../components/StatGrid.astro';
 import SampleDataBanner from '../../components/SampleDataBanner.astro';
 import PlayerHero from '../../components/PlayerHero.astro';
+import SliderPanel from '../../components/SliderPanel.astro';
 import Base from '../../layouts/Base.astro';
 import { getLeagueByKey, getPlayers, isSampleLeague } from '../../lib/data';
 import type { Player } from '../../lib/data';
@@ -58,7 +59,12 @@ const side = player.hitting ? 'hitters' : 'pitchers';
           )}
         </div>
         <div class="right">
-          <!-- sliders: Task 9 -->
+          {(['hitting', 'pitching'] as const).map((s) =>
+            player[s] && league ? (
+              <SliderPanel block={player[s]!} leagueName={league.name} side={s}
+                dual={Boolean(player.hitting && player.pitching)} />
+            ) : null
+          )}
         </div>
       </div>
     )}
