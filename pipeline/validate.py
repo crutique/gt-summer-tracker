@@ -4,17 +4,15 @@ from pipeline import stats_math as sm
 _PIT_COUNT_KEYS = ("g", "gs", "ip_outs", "w", "l", "sv", "hld", "h", "r", "er", "bb", "k", "hb", "hr")
 
 
-def _ip_str_to_outs(ip_str):
-    whole, _, frac = str(ip_str).partition(".")
-    return int(whole) * 3 + int(frac or 0)
-
-
 def _decrease_errors(league_key, sid, prev_counting, new_row):
     errors = []
     for key, old in prev_counting.items():
         if key == "ip":
             new = new_row.get("ip_outs")
-            old_outs = _ip_str_to_outs(old)
+            try:
+                old_outs = sm.ip_str_to_outs(old)
+            except (ValueError, TypeError):
+                continue          # malformed previous value — skip, never crash the gate
             if isinstance(new, int) and new < old_outs:
                 errors.append(
                     f"{league_key}: {sid} counting stat ip decreased {old}->{sm.outs_to_ip_str(new)}")

@@ -74,3 +74,12 @@ def test_negative_pitching_count_any_key_is_error():
     errors, _ = validate.check_league("lg", {"batting": GOOD_BAT, "pitching": bad},
                                       [], previous={})
     assert any("negative" in e for e in errors)
+
+
+def test_decrease_check_skips_malformed_previous_ip():
+    prev = {"p": {"summer": {"leagueKey": "lg"},
+                  "pitching": {"counting": {"ip": "not-a-number", "g": 1}}}}
+    errors, warnings = validate.check_league(
+        "lg", {"batting": GOOD_BAT, "pitching": GOOD_PIT},
+        [_assigned("p", "pitcher")], previous=prev)
+    assert errors == []          # malformed previous ip is skipped, not a crash

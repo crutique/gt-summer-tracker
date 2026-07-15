@@ -47,3 +47,19 @@ def test_zero_denominators_give_none():
 def test_ip_display():
     assert sm.outs_to_ip_str(137) == "45.2"
     assert sm.outs_to_ip_str(54) == "18.0"
+
+
+def test_native_pa_bf_passthrough():
+    assert sm.pa({"pa": 140, "ab": 1, "bb": 1, "hbp": 0, "sf": 0, "sh": 0}) == 140
+    assert sm.bf({"bf": 190, "ip_outs": 1, "h": 1, "bb": 1, "hb": 0}) == 190
+    # zero/missing native values fall back to derivation
+    assert sm.pa({"pa": 0, "ab": 10, "bb": 2, "hbp": 1, "sf": 0, "sh": 0}) == 13
+    assert sm.bf({"ip_outs": 30, "h": 8, "bb": 4, "hb": 1}) == 43
+
+
+def test_ip_str_to_outs():
+    assert sm.ip_str_to_outs("32.1") == 97
+    assert sm.ip_str_to_outs("6.0") == 18
+    assert sm.ip_str_to_outs(7) == 21
+    assert sm.ip_str_to_outs("10,005.1") == 30016
+    assert sm.ip_str_to_outs("") == 0

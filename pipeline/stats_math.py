@@ -6,10 +6,16 @@ def _get(row, key):
 
 
 def pa(b):
+    native = _get(b, "pa")
+    if native:
+        return native
     return _get(b, "ab") + _get(b, "bb") + _get(b, "hbp") + _get(b, "sf") + _get(b, "sh")
 
 
 def bf(p):
+    native = _get(p, "bf")
+    if native:
+        return native
     # BF approx = outs (3*IP) + H + BB + HB  (spec: Percentile engine / derived inputs)
     return _get(p, "ip_outs") + _get(p, "h") + _get(p, "bb") + _get(p, "hb")
 
@@ -45,3 +51,12 @@ def pitching_rates(p):
 
 def outs_to_ip_str(outs):
     return f"{outs // 3}.{outs % 3}"
+
+
+def ip_str_to_outs(ip):
+    """'32.1' -> 97 outs. Accepts int/float-ish strings; commas stripped; '' -> 0."""
+    s = str(ip).replace(",", "").strip()
+    if not s:
+        return 0
+    whole, _, frac = s.partition(".")
+    return int(whole) * 3 + (int(frac) if frac else 0)
