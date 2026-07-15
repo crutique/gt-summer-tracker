@@ -183,7 +183,7 @@ Percentiles are computed only for Tier 1 leagues; the UI never shows a percentil
 ```
 
 - `site/src/data/gamelogs/{slug}.json` — per-player game array.
-- `site/src/data/leagues.json` — per league: key, name, abbrev, officialUrl, platform, gtPlayers[], leagueAvg summary.
+- `site/src/data/leagues.json` — per league: key, name, abbrev, officialUrl, platform, tier, gtPlayers[]. (League averages are NOT duplicated here — the per-metric `leagueAvg` each profile needs ships inside that player's `sliders`; decision recorded during Task 8 review.)
 - `data/history/YYYY-MM-DD/` — copy of the three outputs above per night.
 
 ### Nightly workflow (`.github/workflows/nightly.yml`)

@@ -1161,6 +1161,8 @@ def test_failed_league_carries_forward(tmp_path):
     out, hist = tmp_path / "data", tmp_path / "history"
     build_data.build("pipeline/players.yaml", "pipeline/leagues.yaml", out, hist,
                      today="2026-07-14")
+    log_path = out / "gamelogs" / "jackson-blakely.json"
+    log_before = log_path.read_text()
     # break the league: point fixture_dir somewhere empty
     leagues = tmp_path / "leagues.yaml"
     leagues.write_text(
@@ -1176,6 +1178,8 @@ def test_failed_league_carries_forward(tmp_path):
     jb = players["jackson-blakely"]
     assert jb["asOf"] == "2026-07-14"                 # yesterday's data survived
     assert jb["pitching"]["counting"]["g"] == 7
+    assert log_path.read_text() == log_before        # stale-but-correct gamelog untouched
+    assert (hist / "2026-07-15" / "gamelogs" / "jackson-blakely.json").exists()
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
