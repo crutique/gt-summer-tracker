@@ -1,4 +1,6 @@
 ---
+import CountingList from '../../components/CountingList.astro';
+import StatGrid from '../../components/StatGrid.astro';
 import SampleDataBanner from '../../components/SampleDataBanner.astro';
 import PlayerHero from '../../components/PlayerHero.astro';
 import Base from '../../layouts/Base.astro';
@@ -42,7 +44,24 @@ const side = player.hitting ? 'hitters' : 'pitchers';
       </div>
     )}
 
-    <!-- stat sections appended in Tasks 8-10 -->
+    {hasStats && (
+      <div class="body">
+        <div class="left">
+          {(['hitting', 'pitching'] as const).map((s) =>
+            player[s] ? (
+              <section>
+                <h2 class="section-title">{player.hitting && player.pitching ? `Season Stats — ${s === 'hitting' ? 'Batting' : 'Pitching'}` : 'Season Stats'}</h2>
+                <StatGrid block={player[s]!} side={s} />
+                <CountingList block={player[s]!} side={s} />
+              </section>
+            ) : null
+          )}
+        </div>
+        <div class="right">
+          <!-- sliders: Task 9 -->
+        </div>
+      </div>
+    )}
   </article>
 </Base>
 
@@ -69,4 +88,23 @@ const side = player.hitting ? 'hitters' : 'pitchers';
     margin-right: 6px;
   }
   .empty { padding: 26px 22px; color: var(--text-mut); font-size: 14px; }
+  .body {
+    display: flex;
+    gap: 24px;
+    padding: 20px 22px;
+    background: var(--bg);
+  }
+  .left { flex: 0 0 40%; min-width: 0; }
+  .right { flex: 1; min-width: 0; }
+  .left section + section { margin-top: 20px; }
+  .section-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  @media (max-width: 700px) {
+    .body { flex-direction: column; }
+    .left { flex: 1; }
+  }
 </style>

@@ -1,0 +1,58 @@
+---
+import { fmtEra, fmtPer9, fmtRate3 } from '../lib/format';
+import type { StatBlock } from '../lib/data';
+
+interface Props {
+  block: StatBlock;
+  side: 'hitting' | 'pitching';
+}
+const { block, side } = Astro.props;
+
+const cells = side === 'hitting'
+  ? [
+      { label: 'AVG', value: fmtRate3(block.rates.avg), hot: false },
+      { label: 'OBP', value: fmtRate3(block.rates.obp), hot: false },
+      { label: 'SLG', value: fmtRate3(block.rates.slg), hot: false },
+      { label: 'OPS', value: fmtRate3(block.rates.ops), hot: true },
+    ]
+  : [
+      { label: 'ERA', value: fmtEra(block.rates.era), hot: true },
+      { label: 'WHIP', value: fmtEra(block.rates.whip), hot: false },
+      { label: 'K/9', value: fmtPer9(block.rates.k9), hot: false },
+      { label: 'BB/9', value: fmtPer9(block.rates.bb9), hot: false },
+    ];
+---
+<div class="grid">
+  {cells.map((c) => (
+    <div class={`cell ${c.hot ? 'hot' : ''}`}>
+      <div class="label">{c.label}</div>
+      <div class="value">{c.value}</div>
+    </div>
+  ))}
+</div>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 7px;
+    margin-bottom: 14px;
+  }
+  .cell {
+    background: var(--card);
+    border-radius: 7px;
+    padding: 10px 6px;
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+  .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-mut);
+  }
+  .value { font-size: 20px; font-weight: 800; }
+  .hot { background: var(--navy); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); }
+  .hot .label { color: var(--gold); }
+  .hot .value { color: #fff; }
+</style>

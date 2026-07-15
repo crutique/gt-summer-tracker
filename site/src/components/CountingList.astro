@@ -1,0 +1,74 @@
+---
+import type { StatBlock } from '../lib/data';
+
+interface Props {
+  block: StatBlock;
+  side: 'hitting' | 'pitching';
+}
+const { block, side } = Astro.props;
+const c = block.counting;
+
+const cols: { label: string; value: string | number }[][] = side === 'hitting'
+  ? [
+      [
+        { label: 'Games', value: c.g },
+        { label: 'Hits', value: c.h },
+        { label: 'Doubles', value: c.d },
+        { label: 'Triples', value: c.t },
+        { label: 'Home Runs', value: c.hr },
+        { label: 'RBI', value: c.rbi },
+      ],
+      [
+        { label: 'At Bats', value: c.ab },
+        { label: 'Runs', value: c.r },
+        { label: 'Walks', value: c.bb },
+        { label: 'Strikeouts', value: c.k },
+        { label: 'HBP', value: c.hbp },
+        { label: 'SB / CS', value: `${c.sb} / ${c.cs}` },
+      ],
+    ]
+  : [
+      [
+        { label: 'Games', value: c.g },
+        { label: 'Starts', value: c.gs },
+        { label: 'Innings', value: c.ip },
+        { label: 'W – L', value: `${c.w} – ${c.l}` },
+        { label: 'Saves', value: c.sv },
+        { label: 'Holds', value: c.hld },
+      ],
+      [
+        { label: 'Hits', value: c.h },
+        { label: 'Runs / ER', value: `${c.r} / ${c.er}` },
+        { label: 'Walks', value: c.bb },
+        { label: 'Strikeouts', value: c.k },
+        { label: 'Hit Batters', value: c.hb },
+        { label: 'HR Allowed', value: c.hr },
+      ],
+    ];
+---
+<div class="cols">
+  {cols.map((col) => (
+    <div class="col">
+      {col.map((row) => (
+        <div class="row">
+          <span class="label">{row.label}</span>
+          <span class="value">{row.value}</span>
+        </div>
+      ))}
+    </div>
+  ))}
+</div>
+
+<style>
+  .cols { display: flex; gap: 16px; font-size: 12.5px; }
+  .col { flex: 1; }
+  .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px dotted #d1d5db;
+  }
+  .col .row:last-child { border-bottom: none; }
+  .label { color: var(--text-mut); }
+  .value { font-weight: 700; }
+</style>
