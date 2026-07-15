@@ -49,8 +49,8 @@ def build(players_path, leagues_path, out_dir, history_dir, today=None):
             league_bundles[key] = compute.league_bundle(cfg, stats, logs, wanted=set(sids))
             for p in assigned:
                 sid = p["summer"]["stats_id"]
-                if sid in league_bundles[key]:
-                    gamelogs_by_slug[p["slug"]] = logs.get(sid, [])
+                if sid in league_bundles[key] and logs.get(sid):
+                    gamelogs_by_slug[p["slug"]] = logs[sid]
         except Exception as e:  # noqa: BLE001 — per-league isolation is the point
             result.failures.append((key, str(e)))
             print(f"[build] FAILED {key}: {e} — keeping previous data (if any)", file=sys.stderr)
