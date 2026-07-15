@@ -1278,7 +1278,7 @@ Expected: `2 passed`
 - [ ] **Step 5: Run the FULL suite**
 
 Run: `.venv/bin/pytest -q`
-Expected: all tests pass (sanity 1 + registry 7 + stats_math 5 + percentiles 5 + compute 5 + fixture 3 + validate 9 + output 5 + build 2 = 42; registry, compute, and validate grew during review-fix cycles)
+Expected: all tests pass (sanity 1 + registry 7 + stats_math 5 + percentiles 5 + compute 5 + fixture 3 + validate 9 + output 6 + build 5 = 46; several suites grew during review-fix cycles)
 
 - [ ] **Step 6: Commit**
 
