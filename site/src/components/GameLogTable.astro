@@ -29,7 +29,7 @@ function cells(e: GameLogEntry): (string | number)[] {
     <div class="scroller">
       <table>
         <thead>
-          <tr>{headers.map((h) => <th>{h}</th>)}</tr>
+          <tr>{headers.map((h) => <th scope="col">{h}</th>)}</tr>
         </thead>
         <tbody>
           {entries.map((e) => <tr>{cells(e).map((c) => <td>{c}</td>)}</tr>)}

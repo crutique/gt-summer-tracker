@@ -8,7 +8,8 @@ import PercentileChip from './PercentileChip.astro';
 const assigned = getAssignedPlayers();
 const hitters = assigned.filter((p) => p.hitting);
 const pitchers = assigned.filter((p) => p.pitching);
-const leagues = [...new Set(assigned.map((p) => p.summer.leagueKey!))]
+const statted = [...hitters, ...pitchers];
+const leagues = [...new Set(statted.map((p) => p.summer.leagueKey!))]
   .map((k) => getLeagueByKey(k)!)
   .filter(Boolean);
 
@@ -23,8 +24,10 @@ function teamLeague(p: Player): string {
 ---
 <div class="controls">
   <div class="tabs" role="tablist">
-    <button class="tab active" data-target="hitters" type="button">Hitters</button>
-    <button class="tab" data-target="pitchers" type="button">Pitchers</button>
+    <button class="tab active" data-target="hitters" type="button" role="tab"
+      aria-selected="true" aria-controls="hitters">Hitters</button>
+    <button class="tab" data-target="pitchers" type="button" role="tab"
+      aria-selected="false" aria-controls="pitchers">Pitchers</button>
   </div>
   <select id="league-filter" aria-label="Filter by league">
     <option value="">All Leagues</option>
@@ -32,25 +35,25 @@ function teamLeague(p: Player): string {
   </select>
 </div>
 
-<div class="card" id="hitters">
+<div class="card" id="hitters" role="tabpanel">
   {hitters.length === 0 ? (
     <p class="none">No GT hitters with summer stats yet.</p>
   ) : (
     <table data-sortable>
       <thead>
         <tr>
-          <th data-key="name">Player</th>
-          <th data-key="team">Team · League</th>
-          <th data-key="g" data-numeric>G</th>
-          <th data-key="ab" data-numeric>AB</th>
-          <th data-key="avg" data-numeric>AVG</th>
-          <th data-key="obp" data-numeric>OBP</th>
-          <th data-key="slg" data-numeric>SLG</th>
-          <th data-key="ops" data-numeric>OPS</th>
-          <th data-key="hr" data-numeric>HR</th>
-          <th data-key="rbi" data-numeric>RBI</th>
-          <th data-key="sb" data-numeric>SB</th>
-          <th data-key="pct" data-numeric>OPS %ile</th>
+          <th data-key="name" scope="col">Player</th>
+          <th data-key="team" scope="col">Team · League</th>
+          <th data-key="g" data-numeric scope="col">G</th>
+          <th data-key="ab" data-numeric scope="col">AB</th>
+          <th data-key="avg" data-numeric scope="col">AVG</th>
+          <th data-key="obp" data-numeric scope="col">OBP</th>
+          <th data-key="slg" data-numeric scope="col">SLG</th>
+          <th data-key="ops" data-numeric scope="col">OPS</th>
+          <th data-key="hr" data-numeric scope="col">HR</th>
+          <th data-key="rbi" data-numeric scope="col">RBI</th>
+          <th data-key="sb" data-numeric scope="col">SB</th>
+          <th data-key="pct" data-numeric scope="col">OPS %ile</th>
         </tr>
       </thead>
       <tbody>
@@ -80,24 +83,24 @@ function teamLeague(p: Player): string {
   )}
 </div>
 
-<div class="card" id="pitchers" hidden>
+<div class="card" id="pitchers" role="tabpanel" hidden>
   {pitchers.length === 0 ? (
     <p class="none">No GT pitchers with summer stats yet.</p>
   ) : (
     <table data-sortable>
       <thead>
         <tr>
-          <th data-key="name">Player</th>
-          <th data-key="team">Team · League</th>
-          <th data-key="g" data-numeric>G</th>
-          <th data-key="gs" data-numeric>GS</th>
-          <th data-key="ip" data-numeric>IP</th>
-          <th data-key="era" data-numeric>ERA</th>
-          <th data-key="whip" data-numeric>WHIP</th>
-          <th data-key="k" data-numeric>K</th>
-          <th data-key="bb" data-numeric>BB</th>
-          <th data-key="sv" data-numeric>SV</th>
-          <th data-key="pct" data-numeric>ERA %ile</th>
+          <th data-key="name" scope="col">Player</th>
+          <th data-key="team" scope="col">Team · League</th>
+          <th data-key="g" data-numeric scope="col">G</th>
+          <th data-key="gs" data-numeric scope="col">GS</th>
+          <th data-key="ip" data-numeric scope="col">IP</th>
+          <th data-key="era" data-numeric scope="col">ERA</th>
+          <th data-key="whip" data-numeric scope="col">WHIP</th>
+          <th data-key="k" data-numeric scope="col">K</th>
+          <th data-key="bb" data-numeric scope="col">BB</th>
+          <th data-key="sv" data-numeric scope="col">SV</th>
+          <th data-key="pct" data-numeric scope="col">ERA %ile</th>
         </tr>
       </thead>
       <tbody>
@@ -131,8 +134,12 @@ function teamLeague(p: Player): string {
 
   document.querySelectorAll<HTMLButtonElement>('.tab').forEach((tab) => {
     tab.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach((t) => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
       tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
       document.getElementById('hitters')!.toggleAttribute('hidden', tab.dataset.target !== 'hitters');
       document.getElementById('pitchers')!.toggleAttribute('hidden', tab.dataset.target !== 'pitchers');
     });
@@ -149,8 +156,12 @@ function teamLeague(p: Player): string {
     table.querySelectorAll<HTMLTableCellElement>('th[data-key]').forEach((th, idx) => {
       th.addEventListener('click', () => {
         const dir = th.dataset.dir === 'asc' ? 'desc' : 'asc';
-        table.querySelectorAll('th').forEach((h) => delete h.dataset.dir);
+        table.querySelectorAll('th').forEach((h) => {
+          delete h.dataset.dir;
+          h.removeAttribute('aria-sort');
+        });
         th.dataset.dir = dir;
+        th.setAttribute('aria-sort', dir === 'asc' ? 'ascending' : 'descending');
         const numeric = th.hasAttribute('data-numeric');
         const body = table.tBodies[0];
         [...body.rows]
