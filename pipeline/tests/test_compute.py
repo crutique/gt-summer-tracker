@@ -88,3 +88,15 @@ def test_slider_includes_league_avg_percentile():
     assert 0 <= ops["leagueAvgPercentile"] <= 99
     # league avg is below the best hitter's percentile
     assert ops["leagueAvgPercentile"] < ops["percentile"]
+
+
+def test_derived_false_with_native_denominators():
+    batting = [dict(r, pa=r["ab"] + r["bb"] + r["hbp"] + r["sf"] + r["sh"]) for r in BATTING]
+    pitching = [dict(p, bf=200) for p in PITCHING]
+    bundle = compute.league_bundle(CFG, {"batting": batting, "pitching": pitching},
+                                   {}, wanted={"a", "p1"})
+    hs = {s["metric"]: s for s in bundle["a"]["hitting"]["sliders"]}
+    assert hs["kPct"]["derived"] is False and hs["bbPct"]["derived"] is False
+    ps = {s["metric"]: s for s in bundle["p1"]["pitching"]["sliders"]}
+    assert ps["kPct"]["derived"] is False and ps["bbPct"]["derived"] is False
+    assert ps["oppAvg"]["derived"] is True   # still an approximation even with native BF

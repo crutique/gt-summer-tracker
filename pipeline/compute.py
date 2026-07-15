@@ -12,7 +12,7 @@ def _aggregate(rows, keys):
     return {k: sum(r.get(k, 0) or 0 for r in rows) for k in keys}
 
 
-def _sliders(side, metrics, my_rates, all_rates, lg_avgs, tier):
+def _sliders(side, metrics, my_rates, all_rates, lg_avgs, tier, native_denoms=False):
     if tier != 1:
         return None
     out = []
@@ -31,7 +31,7 @@ def _sliders(side, metrics, my_rates, all_rates, lg_avgs, tier):
             "leagueAvgPercentile": (pc.midrank_percentile(pool, lg_avg,
                                                           invert=pc.is_inverted(side, m))
                                     if lg_avg is not None else None),
-            "derived": m in _DERIVED[side],
+            "derived": m in _DERIVED[side] and not (native_denoms and m != "oppAvg"),
         })
     return out
 
@@ -41,7 +41,8 @@ def _hitting_block(row, all_rates, lg_avgs, tier):
                 ("g", "ab", "r", "h", "d", "t", "hr", "rbi", "bb", "k", "hbp", "sb", "cs")}
     rates = sm.batting_rates(row)
     return {"counting": counting, "rates": rates,
-            "sliders": _sliders("hitting", pc.HITTER_SLIDERS, rates, all_rates, lg_avgs, tier)}
+            "sliders": _sliders("hitting", pc.HITTER_SLIDERS, rates, all_rates, lg_avgs, tier,
+                               native_denoms=bool(row.get("pa")))}
 
 
 def _pitching_block(row, all_rates, lg_avgs, tier):
@@ -50,7 +51,8 @@ def _pitching_block(row, all_rates, lg_avgs, tier):
     counting["ip"] = sm.outs_to_ip_str(row.get("ip_outs", 0) or 0)
     rates = sm.pitching_rates(row)
     return {"counting": counting, "rates": rates,
-            "sliders": _sliders("pitching", pc.PITCHER_SLIDERS, rates, all_rates, lg_avgs, tier)}
+            "sliders": _sliders("pitching", pc.PITCHER_SLIDERS, rates, all_rates, lg_avgs, tier,
+                               native_denoms=bool(row.get("bf")))}
 
 
 def league_bundle(cfg, stats, logs, wanted):
