@@ -1,0 +1,214 @@
+---
+import { fmtEra, fmtRate3 } from '../lib/format';
+import { getAssignedPlayers, getLeagueByKey } from '../lib/data';
+import type { Player, Slider } from '../lib/data';
+import Headshot from './Headshot.astro';
+import PercentileChip from './PercentileChip.astro';
+
+const assigned = getAssignedPlayers();
+const hitters = assigned.filter((p) => p.hitting);
+const pitchers = assigned.filter((p) => p.pitching);
+const leagues = [...new Set(assigned.map((p) => p.summer.leagueKey!))]
+  .map((k) => getLeagueByKey(k)!)
+  .filter(Boolean);
+
+function sliderPct(p: Player, side: 'hitting' | 'pitching', metric: string): number | null {
+  const s: Slider | undefined = p[side]?.sliders?.find((x) => x.metric === metric);
+  return s ? s.percentile : null;
+}
+function teamLeague(p: Player): string {
+  const lg = getLeagueByKey(p.summer.leagueKey);
+  return `${p.summer.team} · ${lg?.abbrev ?? ''}`;
+}
+---
+<div class="controls">
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-target="hitters" type="button">Hitters</button>
+    <button class="tab" data-target="pitchers" type="button">Pitchers</button>
+  </div>
+  <select id="league-filter" aria-label="Filter by league">
+    <option value="">All Leagues</option>
+    {leagues.map((l) => <option value={l.key}>{l.name}</option>)}
+  </select>
+</div>
+
+<div class="card" id="hitters">
+  {hitters.length === 0 ? (
+    <p class="none">No GT hitters with summer stats yet.</p>
+  ) : (
+    <table data-sortable>
+      <thead>
+        <tr>
+          <th data-key="name">Player</th>
+          <th data-key="team">Team · League</th>
+          <th data-key="g" data-numeric>G</th>
+          <th data-key="ab" data-numeric>AB</th>
+          <th data-key="avg" data-numeric>AVG</th>
+          <th data-key="obp" data-numeric>OBP</th>
+          <th data-key="slg" data-numeric>SLG</th>
+          <th data-key="ops" data-numeric>OPS</th>
+          <th data-key="hr" data-numeric>HR</th>
+          <th data-key="rbi" data-numeric>RBI</th>
+          <th data-key="sb" data-numeric>SB</th>
+          <th data-key="pct" data-numeric>OPS %ile</th>
+        </tr>
+      </thead>
+      <tbody>
+        {hitters.map((p) => {
+          const c = p.hitting!.counting;
+          const r = p.hitting!.rates;
+          const pct = sliderPct(p, 'hitting', 'ops');
+          return (
+            <tr data-league={p.summer.leagueKey}>
+              <td data-v={p.name}><a href={`/players/${p.slug}`}><Headshot name={p.name} photo={p.photo} size={22} /> {p.name}</a></td>
+              <td data-v={teamLeague(p)}>{teamLeague(p)}</td>
+              <td data-v={c.g}>{c.g}</td>
+              <td data-v={c.ab}>{c.ab}</td>
+              <td data-v={r.avg ?? '—'}>{fmtRate3(r.avg)}</td>
+              <td data-v={r.obp ?? '—'}>{fmtRate3(r.obp)}</td>
+              <td data-v={r.slg ?? '—'}>{fmtRate3(r.slg)}</td>
+              <td data-v={r.ops ?? '—'} class="strong">{fmtRate3(r.ops)}</td>
+              <td data-v={c.hr}>{c.hr}</td>
+              <td data-v={c.rbi}>{c.rbi}</td>
+              <td data-v={c.sb}>{c.sb}</td>
+              <td data-v={pct ?? '—'}><PercentileChip percentile={pct} /></td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  )}
+</div>
+
+<div class="card" id="pitchers" hidden>
+  {pitchers.length === 0 ? (
+    <p class="none">No GT pitchers with summer stats yet.</p>
+  ) : (
+    <table data-sortable>
+      <thead>
+        <tr>
+          <th data-key="name">Player</th>
+          <th data-key="team">Team · League</th>
+          <th data-key="g" data-numeric>G</th>
+          <th data-key="gs" data-numeric>GS</th>
+          <th data-key="ip" data-numeric>IP</th>
+          <th data-key="era" data-numeric>ERA</th>
+          <th data-key="whip" data-numeric>WHIP</th>
+          <th data-key="k" data-numeric>K</th>
+          <th data-key="bb" data-numeric>BB</th>
+          <th data-key="sv" data-numeric>SV</th>
+          <th data-key="pct" data-numeric>ERA %ile</th>
+        </tr>
+      </thead>
+      <tbody>
+        {pitchers.map((p) => {
+          const c = p.pitching!.counting;
+          const r = p.pitching!.rates;
+          const pct = sliderPct(p, 'pitching', 'era');
+          return (
+            <tr data-league={p.summer.leagueKey}>
+              <td data-v={p.name}><a href={`/players/${p.slug}`}><Headshot name={p.name} photo={p.photo} size={22} /> {p.name}</a></td>
+              <td data-v={teamLeague(p)}>{teamLeague(p)}</td>
+              <td data-v={c.g}>{c.g}</td>
+              <td data-v={c.gs}>{c.gs}</td>
+              <td data-v={c.ip}>{c.ip}</td>
+              <td data-v={r.era ?? '—'} class="strong">{fmtEra(r.era)}</td>
+              <td data-v={r.whip ?? '—'}>{fmtEra(r.whip)}</td>
+              <td data-v={c.k}>{c.k}</td>
+              <td data-v={c.bb}>{c.bb}</td>
+              <td data-v={c.sv}>{c.sv}</td>
+              <td data-v={pct ?? '—'}><PercentileChip percentile={pct} /></td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  )}
+</div>
+
+<script>
+  import { compareCells } from '../lib/tableSort';
+
+  document.querySelectorAll<HTMLButtonElement>('.tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('hitters')!.toggleAttribute('hidden', tab.dataset.target !== 'hitters');
+      document.getElementById('pitchers')!.toggleAttribute('hidden', tab.dataset.target !== 'pitchers');
+    });
+  });
+
+  const filter = document.getElementById('league-filter') as HTMLSelectElement;
+  filter.addEventListener('change', () => {
+    document.querySelectorAll<HTMLTableRowElement>('tr[data-league]').forEach((row) => {
+      row.style.display = !filter.value || row.dataset.league === filter.value ? '' : 'none';
+    });
+  });
+
+  document.querySelectorAll<HTMLTableElement>('table[data-sortable]').forEach((table) => {
+    table.querySelectorAll<HTMLTableCellElement>('th[data-key]').forEach((th, idx) => {
+      th.addEventListener('click', () => {
+        const dir = th.dataset.dir === 'asc' ? 'desc' : 'asc';
+        table.querySelectorAll('th').forEach((h) => delete h.dataset.dir);
+        th.dataset.dir = dir;
+        const numeric = th.hasAttribute('data-numeric');
+        const body = table.tBodies[0];
+        [...body.rows]
+          .sort((a, b) => compareCells(
+            a.cells[idx].dataset.v ?? '', b.cells[idx].dataset.v ?? '', numeric, dir as 'asc' | 'desc'))
+          .forEach((r) => body.appendChild(r));
+      });
+    });
+  });
+</script>
+
+<style>
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 0 10px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .tabs { display: flex; gap: 6px; }
+  .tab {
+    border: none;
+    background: #e6eaef;
+    color: #5b6472;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 14px;
+    padding: 5px 14px;
+    cursor: pointer;
+  }
+  .tab.active { background: var(--navy); color: #fff; }
+  select {
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--card);
+  }
+  .card { overflow-x: auto; }
+  table { font-size: 12.5px; }
+  th {
+    cursor: pointer;
+    user-select: none;
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-mut);
+    font-weight: 700;
+    padding: 8px;
+    border-bottom: 2px solid var(--gold);
+    white-space: nowrap;
+  }
+  th[data-dir='asc']::after { content: ' ↑'; }
+  th[data-dir='desc']::after { content: ' ↓'; }
+  td { padding: 7px 8px; border-bottom: 1px solid #eef1f5; white-space: nowrap; }
+  td a { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; }
+  .strong { font-weight: 800; }
+  .none { padding: 16px; color: var(--text-mut); font-size: 13px; }
+</style>

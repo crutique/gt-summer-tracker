@@ -1,7 +1,65 @@
 ---
-import '../styles/global.css';
+import Base from '../layouts/Base.astro';
+import RosterTable from '../components/RosterTable.astro';
+import { getAssignedPlayers, getLeagueByKey, getUnassignedPlayers } from '../lib/data';
+
+const unassigned = getUnassignedPlayers();
+const pending = unassigned.filter((p) => p.summer.status === 'unassigned');
+const notPlaying = unassigned.filter((p) => p.summer.status === 'not_playing');
+// Assigned but no stats yet (scraper pending) — must not silently disappear from the page.
+const awaiting = getAssignedPlayers().filter((p) => !p.hitting && !p.pitching);
 ---
-<html lang="en">
-  <head><meta charset="utf-8" /><title>GT Summer Tracker</title></head>
-  <body><h1>GT SUMMER TRACKER — coming soon</h1></body>
-</html>
+<Base title="GT Summer Tracker — Georgia Tech baseball in the summer leagues">
+  <h1>2026 Summer League Tracker</h1>
+  <p class="sub">Every projected 2027 Georgia Tech player, tracked nightly across their summer leagues.</p>
+  <RosterTable />
+
+  {awaiting.length > 0 && (
+    <section class="quiet">
+      <h2 class="section-title">Assigned — awaiting stats</h2>
+      <p>
+        {awaiting.map((p, i) => (
+          <>
+            <a href={`/players/${p.slug}`}>{p.name}</a>
+            <span class="where"> ({p.summer.team}, {getLeagueByKey(p.summer.leagueKey)?.name})</span>
+            {i < awaiting.length - 1 ? ' · ' : ''}
+          </>
+        ))}
+      </p>
+    </section>
+  )}
+
+  {pending.length > 0 && (
+    <section class="quiet">
+      <h2 class="section-title">No summer assignment yet</h2>
+      <p>
+        {pending.map((p, i) => (
+          <>
+            <a href={`/players/${p.slug}`}>{p.name}</a>{i < pending.length - 1 ? ' · ' : ''}
+          </>
+        ))}
+      </p>
+    </section>
+  )}
+
+  {notPlaying.length > 0 && (
+    <section class="quiet">
+      <h2 class="section-title">Not playing this summer</h2>
+      <p>
+        {notPlaying.map((p, i) => (
+          <>
+            <a href={`/players/${p.slug}`}>{p.name}</a>{i < notPlaying.length - 1 ? ' · ' : ''}
+          </>
+        ))}
+      </p>
+    </section>
+  )}
+</Base>
+
+<style>
+  h1 { margin: 0 0 2px; font-size: 24px; }
+  .sub { margin: 0 0 18px; color: var(--text-mut); font-size: 14px; }
+  .quiet { margin-top: 26px; }
+  .quiet p { font-size: 13px; line-height: 2; margin: 0; }
+  .where { color: var(--text-mut); }
+</style>
