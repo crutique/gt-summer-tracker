@@ -190,7 +190,7 @@ Percentiles are computed only for Tier 1 leagues; the UI never shows a percentil
 
 1. Cron ~08:00 UTC (4am ET; all leagues' games long finished).
 2. `python pipeline/build_data.py` — scrape leagues independently → compute percentiles → validate → write JSON + history snapshot.
-3. Commit data changes; push. Vercel builds and deploys the Astro site on push.
+3. Commit data changes; push. Vercel builds and deploys the Astro site on push. **Workflow-authoring note (from Task 9 review):** `build_data.py` exits 1 on a partial failure even though it wrote carried-forward outputs first — the commit/push step must run regardless of that exit code (`if: always()` or equivalent), otherwise one broken league would block deploying every healthy league's fresh data.
 4. Also triggerable manually (`workflow_dispatch`) for on-demand refresh.
 
 ## Error handling & data quality
