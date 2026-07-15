@@ -1,0 +1,89 @@
+---
+import type { League, Player } from '../lib/data';
+import Headshot from './Headshot.astro';
+
+interface Props {
+  player: Player;
+  league: League | undefined;
+}
+const { player, league } = Astro.props;
+
+const statusLabel = { returning: 'Returning', transfer: 'Incoming Transfer', freshman: 'Incoming Freshman' }[player.gtStatus];
+const meta = [player.position, statusLabel].filter(Boolean).join(' · ');
+
+let context = '';
+if (player.hitting) {
+  context = `${player.hitting.counting.g} G · ${player.hitting.counting.ab} AB`;
+} else if (player.pitching) {
+  context = `${player.pitching.counting.g} G · ${player.pitching.counting.ip} IP`;
+}
+---
+<header class="hero">
+  <Headshot name={player.name} photo={player.photo} size={72} />
+  <div class="who">
+    <div class="row">
+      <h1>{player.name}</h1>
+      <span class="meta">{meta}</span>
+    </div>
+    <div class="row team-row">
+      {player.summer.team && <span class="team">{player.summer.team}</span>}
+      {league && <span class="pill">{league.name}</span>}
+      {!player.summer.team && <span class="team">No summer assignment confirmed yet</span>}
+    </div>
+  </div>
+  <div class="context">
+    <div class="season">2026 Summer</div>
+    {context && <div class="line">{context}</div>}
+  </div>
+</header>
+
+<style>
+  .hero {
+    background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 55%, #00406f 100%);
+    border-top: 3px solid var(--gold);
+    border-radius: 8px 8px 0 0;
+    padding: 20px 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .who { flex: 1; min-width: 0; }
+  .row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  h1 {
+    margin: 0;
+    color: #fff;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+  }
+  .meta {
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .team-row { margin-top: 6px; align-items: center; }
+  .team { color: #cfd8e3; font-size: 13px; }
+  .pill {
+    background: var(--gold);
+    color: var(--navy-dark);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: 12px;
+    padding: 2px 10px;
+  }
+  .context { text-align: right; flex-shrink: 0; }
+  .season {
+    color: #8fa3b8;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .line { color: #cfd8e3; font-size: 13px; margin-top: 2px; }
+  @media (max-width: 560px) {
+    .hero { flex-wrap: wrap; }
+    .context { text-align: left; }
+  }
+</style>

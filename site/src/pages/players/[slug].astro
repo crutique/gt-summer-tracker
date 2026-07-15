@@ -1,0 +1,72 @@
+---
+import SampleDataBanner from '../../components/SampleDataBanner.astro';
+import PlayerHero from '../../components/PlayerHero.astro';
+import Base from '../../layouts/Base.astro';
+import { getLeagueByKey, getPlayers, isSampleLeague } from '../../lib/data';
+import type { Player } from '../../lib/data';
+
+export function getStaticPaths() {
+  return getPlayers().map((p) => ({ params: { slug: p.slug }, props: { player: p } }));
+}
+
+interface Props {
+  player: Player;
+}
+const { player } = Astro.props;
+const league = getLeagueByKey(player.summer.leagueKey);
+const sample = isSampleLeague(player.summer.leagueKey);
+const firstName = player.name.split(' ')[0];
+const hasStats = Boolean(player.hitting || player.pitching);
+const side = player.hitting ? 'hitters' : 'pitchers';
+---
+<Base title={`${player.name} — GT Summer Tracker`}>
+  {sample && <SampleDataBanner leagueName={league?.name ?? 'League'} />}
+  <article class="card profile">
+    <PlayerHero player={player} league={league} />
+
+    {hasStats && league && (
+      <div class="strip">
+        <span class="dot">i</span>
+        Percentiles rank {firstName} against all <strong>{league.name}</strong> {side},
+        2026 season · stats through {player.asOf}
+      </div>
+    )}
+
+    {!hasStats && (
+      <div class="empty">
+        {player.summer.status === 'assigned'
+          ? `Stats for ${firstName} aren't flowing yet — the ${league?.name ?? 'league'} feed is coming online soon.`
+          : player.summer.status === 'not_playing'
+            ? `${firstName} is not playing summer ball this year.`
+            : `${firstName} doesn't have a confirmed summer team yet. Check back soon.`}
+      </div>
+    )}
+
+    <!-- stat sections appended in Tasks 8-10 -->
+  </article>
+</Base>
+
+<style>
+  .profile { overflow: hidden; }
+  .strip {
+    background: #eef1f5;
+    border-bottom: 1px solid var(--line);
+    padding: 7px 22px;
+    font-size: 12px;
+    color: #5b6472;
+  }
+  .dot {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--navy-dark);
+    text-align: center;
+    font-weight: 800;
+    font-size: 10px;
+    line-height: 14px;
+    margin-right: 6px;
+  }
+  .empty { padding: 26px 22px; color: var(--text-mut); font-size: 14px; }
+</style>
