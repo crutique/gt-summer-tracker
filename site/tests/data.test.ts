@@ -22,7 +22,7 @@ describe('data access', () => {
   });
 
   it('exposes sliders with leagueAvgPercentile', () => {
-    const jb = getPlayer('jackson-blakely')!;
+    const jb = getPlayer('riley-hasenstab')!;
     const sliders = jb.pitching!.sliders!;
     expect(sliders).toHaveLength(6);
     expect(sliders[0]).toHaveProperty('leagueAvgPercentile');
@@ -35,13 +35,14 @@ describe('data access', () => {
     expect(getLeagueByKey('nope')).toBeUndefined();
   });
 
-  it('flags fixture-platform leagues as sample data', () => {
-    expect(isSampleLeague('northwoods')).toBe(true);
+  it('no leagues are sample data after cutover', () => {
+    expect(isSampleLeague('northwoods')).toBe(false);
     expect(isSampleLeague('mlb_draft')).toBe(false);
   });
 
   it('loads gamelogs by slug, empty for missing', () => {
-    expect(getGamelog('jackson-blakely').length).toBeGreaterThanOrEqual(2);
+    expect(getGamelog('riley-hasenstab').length).toBeGreaterThanOrEqual(2);
+    expect(getGamelog('jackson-blakely')).toEqual([]);
     expect(getGamelog('will-baker')).toEqual([]);
   });
 });

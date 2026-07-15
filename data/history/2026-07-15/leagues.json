@@ -4,7 +4,7 @@
   "name": "Northwoods League",
   "abbrev": "NWL",
   "officialUrl": "https://northwoodsleague.com",
-  "platform": "fixture",
+  "platform": "scorebook",
   "tier": 1,
   "gtPlayers": [
    "jackson-blakely",

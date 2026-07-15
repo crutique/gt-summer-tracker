@@ -209,9 +209,11 @@ Percentiles are computed only for Tier 1 leagues; the UI never shows a percentil
 
 ## Handoff conditions (recorded during Plan 1 final review)
 
-1. **Sample data must never deploy publicly unflagged.** The committed northwoods data is fabricated sample data attributed to three real players (Blakely, Vicens, Hasenstab). Plan 2's site must treat `platform == "fixture"` in leagues.json as "show a 'sample data — not live stats' disclaimer," and the public launch is gated on Plan 3's real scraper replacing the fixture source. Consider adding an explicit `source`/`provisional` field to players.json.
-2. **Fixture→real cutover needs a one-time reset.** The first real scrape will be validated against the committed fabricated `previous` — real counting stats lower than invented ones would trip the decrease check and lock the league on stale sample data via carry-forward. At cutover, delete the committed sample `site/src/data` contents (and optionally the sample history snapshots) before the first real run.
-3. **Real scrapers (Plan 3): skip gamelog writes when a present player's log fetch returns empty** — an empty fetch currently overwrites a good log file; only omitted players are protected.
+> The Northwoods cutover happened 2026-07-15 (platform: scorebook). The fixture platform remains for tests only and is not referenced by leagues.yaml.
+
+1. **[SATISFIED 2026-07-15]** **Sample data must never deploy publicly unflagged.** The committed northwoods data is fabricated sample data attributed to three real players (Blakely, Vicens, Hasenstab). Plan 2's site must treat `platform == "fixture"` in leagues.json as "show a 'sample data — not live stats' disclaimer," and the public launch is gated on Plan 3's real scraper replacing the fixture source. Consider adding an explicit `source`/`provisional` field to players.json.
+2. **[SATISFIED 2026-07-15]** **Fixture→real cutover needs a one-time reset.** The first real scrape will be validated against the committed fabricated `previous` — real counting stats lower than invented ones would trip the decrease check and lock the league on stale sample data via carry-forward. At cutover, delete the committed sample `site/src/data` contents (and optionally the sample history snapshots) before the first real run.
+3. **[SATISFIED 2026-07-15 — empty-fetch gate in build_data]** **Real scrapers (Plan 3): skip gamelog writes when a present player's log fetch returns empty** — an empty fetch currently overwrites a good log file; only omitted players are protected.
 
 ## Bootstrap (pre-launch research, not code)
 
